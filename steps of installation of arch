@@ -1,0 +1,386 @@
+Part 1
+------
+
+After the Arch iso(x86_64) boot you are working as root (#)
+Follow these commands in the terminal:DONOT INCLUDE THE HASH #
+
+1- Checking for network connection
+        type in the terminal: 
+    #   ping www.google.com (then push Enter button)
+
+2-IF you DO-NOT have connection usually wireless type the following command:
+    #   ip addr show (then push Enter button)
+
+For the wireless connection type in the terminal:
+   #          wifi-menu  (then push Enter button)
+
+then choose you SSD the name of your wifi then enter the password for your wifi
+it is recommanded to use the wired connection because you will get a good connection and it is 100 precent garanteed you will have network connection.
+-----------------------------------------------------------------------------------
+gpt is for hard drives over 2 tera bytes --EFI
+dos is for hard drives less than 2 tera bytes ---MBR
+
+PARTITIONING(efi-GPT and legacy partitioning-DOS-systems).Examples
+-------------------------------------------------------------
+FIrst Example: using fdisk on EFI-gpt--------1
+Second Example: using cfdisk on legacy-dos---2
+
+3-After you established the network connection then type in the terminal:
+  
+   #  lsblk (then push Enter button)
+
+This will show the label of your disk according to the Arch installation iso
+if have more then one disk it will labeled them usually sda for first disk and sdb for the second disk and sdc for the third and so on it is better to choose the first disk sda.you can choose the second disk sdb if you have anothe operating system installed on sda.
+
+4- Use the CFDISK (much easier then FDISK) utility it work with legacy-system MBR partitioning use the (dos- partion-table) and also it work with using(gpt-partion-table) 
+
+Example here using cfdisk on legacy-system (dos-table-partition-mbr)we creating three partitions first partition 150M as the boot-partition second partition is the root-partition and third is the home partition.the order is important.
+--------------------------------------------------
+Start cdfisk utility partition: type the following command in the terminal;
+-------------------------------------------------------------------------------
+# cfdisk /dev/sda   -----  sda= is the labl of the whole disk.(remember the command lsblk which gaves us the lable of the whole disk)
+
+after you type the command : # cfdisk /dev/sda cfdisk will open with your hard-disk layout.
+
+Choose the type dos hit enter  ---use the down arrow
+
+1-Creat boot partitiom (150M):
+-----------------------------
+choose New hit enter
+type 150M hit enter
+choose Primary hit enter
+choose Bootable hit enter   ------use the left or right arrow to choose then hit enter to confirm your choice
+
+2-Creat the root partition (10G):
+choose Free space hit enter ----use the down arrow
+choose New hit enter
+type 10G hit enter
+choose Primary hit entermount
+
+3-Creat the home partition(15G).
+choose Free space hit enter ----use the down arrow
+choose New hit enter
+type 15G hit enter
+choose Primary hit enter
+
+4-Finalize partition changes
+choose Write hit enter
+it give you message Are you sure want to write the partition table to disk?
+type yes hit enter
+then go to quit tap hit enter
+done partitioning.
+
+1Formating the previous three-patritions
+---------------------------------------
+Formating The boot partition sda1,the root partition sda2 and home partition sda3 to ext4 filesystem
+
+by typing the following two commands:
+# mkfs.ext4 /dev/sda1  ---formatting sda1 ---boot partition  ---filesystem ext4 ---primary --boot
+# mkfs.ext4 /dev/sda2  ---formating  sda2 ---root partition  ---filesystem ext4 ---primay
+# mkfs.ext4 /dev/sda3  ---formating  sda3 ---home partition  ---filesystem ext4 ---primay
+-----------------------------------------------------------------------------------         
+Mounting partitions of the dos partition table(very important):
+-arch------------------------------------
+
+1-Mounting sda2(root partition) to mnt directory type the following command:
+# mount /dev/sda2 /mnt
+
+ 2- Creat a directory boot inside mnt directory by typing command:
+# mkdir /mnt/boot
+
+3-mounting sda1(boot partition) to that boot folder or directory we creat in the mnt folder
+# mount /dev/sda1 /mnt/boot      
+
+4 Creat a directory home inside mnt directory by typing command:
+    # mkdir /mnt/home
+
+5 mounting sda3(home partition) to that home folder we creat in the mnt folder
+# mount /dev/sda3 /mnt/home
+----------------------------------------------------------------------------- 
+Creat etc directory in mnt directory
+------------------------------------
+# mkdir /mnt/etc
+
+genarate fstab file the /etc/fstab file
+-----------------------------------------
+# genfstab -U -p /mnt >> /mnt/etc/fstab
+Check the /etc/fstab file
+# cat /mnt/etc/fstab
+------------------------------------------
+Installing Arch linux kernel and firmware 
+-----------------------------------------
+# pacstrap /mnt base base-devel linux linux-firmware
+
+ Access the in-progress Arch installation
+-----------------------------------------------------
+# arch-chroot
+
+Install Arch Linux kernel the basic-kernel and the LTS-kernel
+--------------------------------------------------------------
+ # pacman -S linux linux-lts linux-headers linux-lts-headers 
+
+Install a text editor
+----------------------
+# pacman -S nano
+
+Install optional packages(ssh)
+-----------------------------------
+# pacman -S base-devel openssh
+Enable OpenSSH if you've installed it
+# systemctl enable sshd
+
+Install packages for wired networking---First
+---------------------------------------------
+# pacman -S networkmanager
+
+Install packages for wireless networking---second
+---------------------------------------------
+# pacman -S networkmanager wpa_supplicant wireless_tools netctl
+
+Install dialog (required for wifi-menu).
+---------------------------------------
+# pacman -S dialog
+ 
+Enable networkmanager
+# systemctl enable NetworkManager
+ --------------------------------
+
+Create the initial ramdisk for the main kernel
+----------------------------------------------
+# mkinitcpio -p linux
+
+Create the initial ramdisk for the LTS kernel (if you've installed it).
+----------------------------------------------------------------------
+# mkinitcpio -p linux-lts
+ 
+ configure locale
+ -----------------
+Uncomment the line from the /etc/locale.gen file that corresponds to your locale
+# nano /etc/locale.gen (uncomment en_US.UTF-8)
+
+Generate the locale
+------------------
+# locale-gen
+---------------------------------------------------------------------------------------------------------------------------------------------------
+Setup default language:
+------------------------
+we need to creat a file  locale.conf to type our choosen laguage in side this file we are creating.
+# nano /etc/locale.conf   ---- we type LANG=en-US.UTF-8 then CTL-o PUSH enter to save then CTRL o to exit
+
+Setup a host name
+-----------------
+# nano /etc/hostname   --- we actully creating a file call hostname and we typing a hostname you can choose any name you like i put
+ archaref in the hostname file
+
+Setup the time zone (We link Ythe time to out local file)
+---------------------
+# ln -sf /usr/share/zoneinfo/  --------then hit the TAP KEY then type America the hit TAP (twice), type y key choose New_york
+
+# ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime ----this command will connect the time zone to our local file installation.
+
+Set the root password
+---------------------
+# passwd
+
+Create a user for yourself
+# useradd -m -g users -G wheel <username>
+
+Set your password
+# passwd <username>
+
+Install sudo (may already be installed),but install again.
+-----------------------------------------------------------
+# pacman -S sudo
+
+Install which
+--------------
+# pacman -S which
+
+Allow users in the 'wheel' group to use sudo
+---------------------------------------------
+# EDITOR=nano visudo  -----this command will set the Default text editor to nano instead of vim
+                           
+Uncomment: delete the # at the followuing line
+
+ %wheel ALL=(ALL) ALL
+ 
+ link to the following arch commanda about grub:
+ https://wiki.archlinux.org/index.php/GRUB#Master_Boot_Record_(MBR)_specific_instructions
+ ---------------------------------------------------------------------------------
+ Install Grub 
+ -------------
+ # pacman -S grub 
+ 
+ # grub-install --target=i386-pc /dev/sdX ---- sdX is the whole disk in this case is 
+                                               sda(not the partition) not working
+Generate Grub for MBR
+---------------------- 
+ Use the grub-mkconfig tool to generate /boot/grub/grub.cfg
+   #     grub-mkconfig -o /boot/grub/grub.cfg                 
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+Wrapping Up, Optional Considerations
+--------------------------------------------------------------------------------------------------------------------------------------------------
+Install CPU Microde files (AMD CPU)
+ pacman -S amd-ucode
+
+Install CPU Microde files (Intel CPU)
+ pacman -S intel-ucode
+
+Installing the xorg manager:
+ # pacman -S xorg-server xorg-xinit   ----------------------This command did work
+ # pacman -S xorg-server xorg-server-utils xorg-xinit   ----This command did not work(xorg-server-utils).!!
+
+Install 3D support for Intel or AMD graphics
+If you have an Intel or AMD GPU, install the mesa package:
+ pacman -S mesa
+
+Install Nvidia Driver packages if you have an Nvidia GPU
+# pacman -S nvidia nvidia-utils
+Note: Install nvidia-lts if you've installed the LTS kernel:
+
+# pacman -S nvidia-lts
+Install Virtualbox guest packages
+If you're installing Arch inside a Virtualbox virtual machine, install these packages:
+
+# pacman -S virtualbox-guest-utils xf86-video-vmware
+Moment of truth:
+Exit the chroot environment
+ exit
+Unmount everything (some errors are okay here)
+   # umount -R /mnt
+OR # umount -a 
+Reboot the machine or poweroff the machine and eject the installation media
+ reboot 
+ OR 
+# poweroff (Remember: to remove the installation cd or usb).
+then trun on the machine and log in as root or as standard user aref.
+ -------------------------------------------------------------------------------------------------------------------------------------------------
+Part 2     (you must be root to do the following steps)
+-----
+  Installing the Graphic-Driver:
+---------------------------------
+   Find out your Graphic Manufacture by typing the following command:
+  # lspci
+
+ Note:These are list of graphic driver with the correspond with the Manufacture of your Graphic driver and install    
+ 
+ # pacman -S xf86-video-amdgpu  -- Manufacture-AMD
+ # pacman -S xf86-video-intel   ---Manufacture-INTEL
+ # pacman -S xf86-video-nouveau ---Manufacture-NVIDIA
+ 
+ The vesa driver:
+ ----------------
+ # pacman -S xf86-video-vesa    ---This driver must have in case Manufacture driver 
+                                   fail to load or use it as a backup or even you do not know your
+                                   Manufacture driver.use this driver for virtualbox and vmware machine.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+  Install this xfce second go to install lxde-A first then come back install this xfce-B very important
+  so you will not get error with the sound!!
+  
+A-  How to install Xfce Desktop on Arch Linux:  
+  --------------------------------------------
+  Step 1 – Update your system
+Make sure to update the system before installing xfce4.
+
+# sudo pacman -Syu ------(if you log in as root no need for sudo).
+
+Step 2 – Download XFCE Desktop
+After updating system, run the following command to install xfce4 desktop environment 
+with additional packages and display manager.
+
+# sudo pacman -S xfce4 xfce4-goodies lxdm
+
+Step 3 – Enable Display Manager
+If you have already a display manager installed on your system, simply logout from the current user,
+ then on the login window select “XFCE Session”.
+
+# sudo systemctl enable lxdm
+
+Run the above command to install lxdm display manager,
+and you should be able to login to your desktop via lxdm.
+-------------------------------------------------------------------------------------------------------------------------------------------------
+B-Installing lxde or other desktop on Arch linux:
+-----------------------------------------------
+  
+ Installing Display-Manger(log-in screen).
+It is good to check the Arch wiki on Display-manager(log in screen) each Desktop enviroment has it corresponded Display manager the list below give you some Desktop enviorment and their corresponded display manager:
+ 
+  Desktops--------Display managers
+    
+  KDEplasma5--------sddm
+  KDE4--------------kdm*
+  GNOME-------------gdm
+  LXDE--------------lxdm
+  UNIVERSAL DISPLAY-MANAGER : lightdm,mdm-display-manager,slim,xorg-xdm
+
+Importyant Note:KDM is installed as part of the kdebase-workspace package,so if you are installing KDE4,there is no need to install KDM manually. It is better always to install the display manager with the corresponed Destop so you you donot have to chage the configrations of the Desktop.
+
+Now let install the Display manager for KDEplasma5 Desktop which in this case the display manager is sddm
+
+#pacaman -S sddm   for KDE display manger
+---------------------------------------------------------------------------------------------------------------------------------------------------
+PART-3
+
+Installing The Desktop-Enviroment
+----------------------------------
+All Desktops belong to certain groups of install the list of all Desktops and their corresponded group of install  are as follow 
+ 
+Desktop       install
+---------     ----------
+KDEplasma-----plasma
+Cinnamon------cinnamon
+GNOME---------gnome
+LXDE----------lxde or lxde-gtk3
+MATE----------mate or mate-gtk3
+XFCE----------xfce4
+so according to the list we want to install the KDEplasma5 then the command as follow
+
+# pacman -S plasma   ----FOR KDE-5 Desktop
+# pacman -S xfce4    -----FOR XFCE Desktop
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+EXTRA-Applications MUST INSTALL AFTER INSTALL THE desktop-evniorments:
+--------------------------------------------------------------------
+The desktop enviroment the plasma or xfce4 or gunome DONOT have a lot of desktop applications it has the minimum of some Desktop applications the list as below are the group of extra application that crosspond to the DESKTOP -EVIROMENT
+
+KDE Plasma 5 ---kde-applications
+Cinnamon-N/A*;however,you may want to install --nemo-fileroller,archive utility
+GNOME-----------gnome-extra
+LXDE----N/A
+MATE ----------mate-extra
+Xfce ----------xfce4-goodies
+note:* note the this* next to the cinnamon apps are either installed as part of the base desktop enviorment group,or is no additional pacage group availble.
+Installing the groups of application with corresponded DESKTOP enviorment
+
+Enable the Display manager(log-screen)
+--------------------------------------
+# systemctl enable sddm  -----for KDE
+rebootnager it is icluded when install xfce4
+if you get an error that mean this is not your display manger you should check the Arch Documentation to find out what is your display manger of your installed Desktop?
+finally type reboot hit enter.DONE
+THEN AFTER REBOOT LOG IN
+---------------------------------------------------------------------------------------------------------------------------------------------
+Error: no sound!! 1 when I install xfce Desktop first. !!Note:I should install lxde desktop first then the the xfce desktop second.
+------------------------------------------------------
+Important Notice:
+----------------
+when i install lxde desktop first then the xfce desktop second I have no problem with sound in the xfce desktop
+but when I install the xfce first then the lxde desktop second I have problem with the sound inside the xfce-no sound !!
+
+I DONOT HAVE SOUND !!! SO I have to install pulseaudio.and then start it with this command # pulseaudio --start, if you want to kill pulseaudio
+type this command # pulseaudio -k. note before i install pulseaudio I install these packages in order 1-pavucontrol 2-libcanberra ,3- alsa ,4-pulseaudio  THEN AFTER INSTALLING THESE FOUR PACKAGES I start pulseaudio with this command # pulseaudio --start.Finally I got the sound working in the Arch-Xfce-Desktop.please check (Arch Documentation Of Troubleshooting)-link:
+
+# pulseaudio --start ( This is the command that fix the problem with the sound).
+
+-check-out the arch documentation on pulseaudio-troubleshooting link:-
+
+https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting#No_sound_after_resume_from_suspend
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+Thank you for using my Documentatiom on installing Arch from command line
+AREF R AHMED software-development-engineer.
+E-mail me:  sabata4000@gmail.com  or sabata5000@gmail.com
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
