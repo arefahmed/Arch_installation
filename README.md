@@ -74,5 +74,5 @@ sudo pacman -S lxde ---this will install the lxde-desktop and the lxdm-disply-ma
 Enable the lxdm-display-manager at startup-vey-important-step:
 -------------------------------------------------------------
 sudo systemctl enable lxdm
-reboot
+reboot-done
 
